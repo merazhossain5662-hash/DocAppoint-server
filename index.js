@@ -59,7 +59,6 @@ async function run() {
    // to see the appoinments using email 
    app.get('/appoinments/:email', async(req, res)=>{
     const {email} = req.params
-    
      const data = await appoinmentsCollection.find({userEmail : email}).toArray()
       res.json(data)
    })
