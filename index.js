@@ -54,7 +54,8 @@ async function run() {
       const data = req.body
       const adddData= await appoinmentsCollection.insertOne(data)
        res.json(adddData);
-    })
+    });
+
 
 
     // Send a ping to confirm a successful connection
