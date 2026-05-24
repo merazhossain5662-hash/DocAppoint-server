@@ -56,7 +56,13 @@ async function run() {
        res.json(adddData);
     });
 
-
+   // to see the appoinments using email 
+   app.get('/appoinments/:email', async(req, res)=>{
+    const {email} = req.params
+    
+     const data = await appoinmentsCollection.find({userEmail : email}).toArray()
+      res.json(data)
+   })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
