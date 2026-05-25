@@ -50,14 +50,14 @@ async function run() {
     const doctorsCollection = db.collection("doctors");
    const appoinmentsCollection = db.collection("appoinments");
     // to get all doctors data:
-    app.get('/allDoctors', tokenVerifyer,  async(req, res)=>{
+    app.get('/allDoctors',  async(req, res)=>{
      const data = await doctorsCollection.find().toArray();
      
      res.json(data)
     });
   
   //to get one data by _id
-  app.get('/allDoctors/:id', tokenVerifyer, async(req, res)=>{
+  app.get('/allDoctors/:id',  async(req, res)=>{
     const id = req.params.id
     
      const data = await doctorsCollection.findOne({_id: new ObjectId(id)})
