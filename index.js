@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors')
 const dotenv = require('dotenv');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 const app= express();
 dotenv.config();
 
@@ -18,10 +19,26 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-const data = {
-  name : "meraz" ,
 
-} 
+
+ const JWKS = createRemoteJWKSet(
+      new URL('http://localhost:3000/api/auth/jwks')
+    );
+
+const tokenVerifyer = async(req, res, next)=>{
+  const header = req?.headers.authorization
+if(!header){
+  return res.status(401).json({message : "unauthorized"})
+}
+  const token = header.split(" ")[1]
+
+
+      const { payload } = await jwtVerify(token, JWKS, {
+      issuer: 'http://localhost:3000', // Should match your JWT issuer, which is the BASE_URL
+      audience: 'http://localhost:3000', // Should match your JWT audience, which is the BASE_URL by default
+    })
+  next()
+}
 
 async function run() {
   try {
@@ -33,14 +50,14 @@ async function run() {
     const doctorsCollection = db.collection("doctors");
    const appoinmentsCollection = db.collection("appoinments");
     // to get all doctors data:
-    app.get('/allDoctors', async(req, res)=>{
+    app.get('/allDoctors', tokenVerifyer,  async(req, res)=>{
      const data = await doctorsCollection.find().toArray();
      
      res.json(data)
     });
   
   //to get one data by _id
-  app.get('/allDoctors/:id', async(req, res)=>{
+  app.get('/allDoctors/:id', tokenVerifyer, async(req, res)=>{
     const id = req.params.id
     
      const data = await doctorsCollection.findOne({_id: new ObjectId(id)})
@@ -50,23 +67,33 @@ async function run() {
     }); 
 
     // to add appoinments
-    app.post('/appoinments', async(req, res)=>{
+    app.post('/appoinments', tokenVerifyer, async(req, res)=>{
       const data = req.body
       const adddData= await appoinmentsCollection.insertOne(data)
        res.json(adddData);
     });
 
    // to see the appoinments using email 
-   app.get('/appoinments/:email', async(req, res)=>{
+   app.get('/appoinments/:email', tokenVerifyer, async(req, res)=>{
     const {email} = req.params
      const data = await appoinmentsCollection.find({userEmail : email}).toArray()
       res.json(data)
    })
 
    //to delete appoinmet using _id
-   app.delete('/appoinments/:id', async(req, res)=>{
+   app.delete('/appoinments/:id', tokenVerifyer, async(req, res)=>{
     const {id} = req.params
      const data = await appoinmentsCollection.deleteOne({_id: new ObjectId(id)})
+      res.json(data)
+   })
+
+   //to update appoinment using id
+   app.patch('/appoinments/:id', tokenVerifyer, async(req, res)=>{
+    const {id} = req.params
+    const updatedData =req.body
+     const data = await appoinmentsCollection.updateOne({_id: new ObjectId(id)},
+    {$set: updatedData}
+    )
       res.json(data)
    })
 
