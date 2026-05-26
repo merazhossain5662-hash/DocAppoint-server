@@ -57,7 +57,7 @@ async function run() {
     });
   
   //to get one data by _id
-  app.get('/allDoctors/:id',  async(req, res)=>{
+  app.get('/allDoctors/:id', tokenVerifyer, async(req, res)=>{
     const id = req.params.id
     
      const data = await doctorsCollection.findOne({_id: new ObjectId(id)})
